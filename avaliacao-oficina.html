@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avaliação da Oficina · ACT-Brasil</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --olive:#8B9351;
+    --olive-dark:#5b6238;
+    --forest:#333d22;
+    --forest-deep:#1f2716;
+    --cream:#faf6ec;
+    --cream-2:#f1ead9;
+    --earth:#a9713f;
+    --earth-dark:#8a5a30;
+    --ink:#2c2f22;
+    --ink-soft:#585c46;
+    --radius-lg:32px;
+    --radius-md:20px;
+    --radius-pill:999px;
+    --shadow-card:0 24px 60px -18px rgba(31,39,22,.5), 0 4px 14px rgba(31,39,22,.16);
+    --ff-serif:'Fraunces', Georgia, serif;
+    --ff-sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:var(--ff-sans);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ============================================================
+     FUNDO FOTOGRÁFICO
+     As imagens de fundo trocam de pergunta em pergunta com um
+     efeito suave de esmaecimento (crossfade), sobre elas fica uma
+     camada verde oliva semitransparente para o texto ficar legível.
+     ============================================================ */
+  .bg-photo{
+    position:fixed;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    filter:saturate(.8) brightness(.78) sepia(.22) hue-rotate(48deg) contrast(1.05);
+    opacity:0;
+    transition:opacity 1.4s ease;
+    z-index:0;
+  }
+  .bg-photo.is-active{opacity:1;}
+
+  .bg-tint{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(31,39,22,.15), transparent 55%),
+      linear-gradient(165deg, rgba(139,147,81,.80), rgba(51,61,34,.86));
+  }
+
+  /* ============================================================ */
+
+  .app{
+    position:relative;
+    z-index:10;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Barra de progresso fina no topo da tela */
+  .progress-track{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:5px;
+    background:rgba(255,255,255,.28);
+    z-index:20;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--earth), var(--cream));
+    transition:width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .top-bar{
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:22px 18px 8px;
+    flex-shrink:0;
+  }
+
+  /* Logo fixo, visível em todas as telas */
+  .logo-badge{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 22px;
+    background:rgba(31,39,22,.32);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:var(--radius-pill);
+    backdrop-filter:blur(6px);
+    box-shadow:0 8px 24px -8px rgba(0,0,0,.35);
+  }
+  .logo-badge img{
+    height:30px;
+    width:auto;
+    display:block;
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,.35));
+  }
+
+  .step-pill{
+    position:absolute;
+    right:18px;
+    top:22px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.02em;
+    color:var(--cream);
+    background:rgba(31,39,22,.32);
+    border:1px solid rgba(255,255,255,.18);
+    padding:7px 14px;
+    border-radius:var(--radius-pill);
+    backdrop-filter:blur(6px);
+    white-space:nowrap;
+  }
+
+  .progress-label{
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.03em;
+    color:var(--cream);
+    opacity:.9;
+    text-shadow:0 1px 4px rgba(0,0,0,.35);
+    padding:6px 18px 0;
+    flex-shrink:0;
+  }
+
+  .stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px 18px 28px;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overflow-x:clip;
+  }
+
+  .card{
+    width:100%;
+    max-width:640px;
+    background:rgba(250,246,236,.96);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+    padding:40px 40px 32px;
+    position:relative;
+    overflow:hidden;
+    transition:opacity .32s ease, transform .32s ease;
+    will-change:transform;
+    isolation:isolate;
+  }
+  .card.is-transitioning{
+    opacity:0;
+    transform:translateY(14px);
+  }
+
+  /* Detalhe decorativo orgânico no canto do cartão */
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-60px; right:-60px;
+    width:180px; height:180px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(139,147,81,.18), transparent 70%);
+    pointer-events:none;
+  }
+
+  .leaf-icon{
+    width:30px; height:30px;
+    color:var(--olive);
+    margin-bottom:14px;
+    opacity:.85;
+  }
+
+  .q-text{
+    font-family:var(--ff-serif);
+    font-weight:600;
+    font-size:clamp(22px, 4vw, 30px);
+    line-height:1.28;
+    color:var(--forest-deep);
+    margin:0 0 6px;
+  }
+  .q-optional-tag{
+    display:inline-block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    background:var(--cream-2);
+    padding:3px 10px;
+    border-radius:var(--radius-pill);
+    margin-bottom:16px;
+  }
+
+  .q-field{margin-top:24px;}
+
+  /* ---- Texto longo ---- */
+  textarea.field-textarea{
+    width:100%;
+    min-height:130px;
+    resize:vertical;
+    font-family:var(--ff-sans);
+    font-size:16px;
+    line-height:1.5;
+    color:var(--ink);
+    padding:16px 18px;
+    border-radius:var(--radius-md);
+    border:1.5px solid #ded4bd;
+    background:#fffdf8;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  textarea.field-textarea:focus{
+    border-color:var(--olive);
+    box-shadow:0 0 0 4px rgba(139,147,81,.18);
+  }
+
+  input.field-text{
+    width:100%;
+    font-family:var(--ff-sans);
+    font-size:16px;
+    color:var(--ink);
+    padding:14px 18px;
+    border-radius:var(--radius-pill);
+    border:1.5px solid #ded4bd;
+    background:#fffdf8;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  input.field-text:focus{
+    border-color:var(--olive);
+    box-shadow:0 0 0 4px rgba(139,147,81,.18);
+  }
+
+  /* ---- Escala numérica (0 a 10 / 1 a 5) ---- */
+  .scale-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+  .scale-btn{
+    min-width:46px;
+    height:46px;
+    padding:0 4px;
+    border-radius:14px;
+    border:1.5px solid #ded4bd;
+    background:#fffdf8;
+    font-family:var(--ff-sans);
+    font-weight:600;
+    font-size:16px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .scale-btn:hover{border-color:var(--olive);}
+  .scale-btn.is-selected{
+    background:linear-gradient(135deg, var(--olive), var(--olive-dark));
+    border-color:transparent;
+    color:#fff;
+    transform:scale(1.08);
+    box-shadow:0 8px 18px -6px rgba(91,98,56,.55);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+
+  /* ---- Escala de carinhas (emoji) ---- */
+  .emoji-row{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .emoji-btn{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    padding:14px 4px 12px;
+    border-radius:16px;
+    border:1.5px solid #ded4bd;
+    background:#fffdf8;
+    cursor:pointer;
+    transition:transform .15s ease, background .2s ease, border-color .2s ease;
+  }
+  .emoji-btn .emoji{
+    font-size:26px;
+    line-height:1;
+    filter:grayscale(.55);
+    transition:filter .2s ease;
+  }
+  .emoji-btn .emoji-label{
+    font-size:11px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .emoji-btn:hover{border-color:var(--olive);}
+  .emoji-btn.is-selected{
+    background:linear-gradient(160deg, rgba(139,147,81,.22), rgba(139,147,81,.08));
+    border-color:var(--olive);
+    transform:translateY(-3px);
+  }
+  .emoji-btn.is-selected .emoji{filter:none;}
+
+  /* ---- Múltipla escolha ---- */
+  .choice-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .choice-btn{
+    text-align:left;
+    padding:14px 18px;
+    border-radius:var(--radius-md);
+    border:1.5px solid #ded4bd;
+    background:#fffdf8;
+    font-family:var(--ff-sans);
+    font-size:15.5px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .choice-btn:hover{border-color:var(--olive);}
+  .choice-btn.is-selected{
+    background:linear-gradient(135deg, rgba(139,147,81,.24), rgba(139,147,81,.1));
+    border-color:var(--olive);
+    font-weight:600;
+  }
+
+  .q-error{
+    color:#a1432a;
+    font-size:13.5px;
+    font-weight:600;
+    margin:14px 0 0;
+    display:none;
+  }
+  .q-error.is-visible{display:block;}
+
+  @keyframes shake{
+    10%,90%{transform:translateX(-1px);}
+    20%,80%{transform:translateX(2px);}
+    30%,50%,70%{transform:translateX(-4px);}
+    40%,60%{transform:translateX(4px);}
+  }
+  .card.is-shaking{animation:shake .5s;}
+
+  .q-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:30px;
+  }
+
+  .btn{
+    font-family:var(--ff-sans);
+    font-weight:600;
+    font-size:15.5px;
+    border-radius:var(--radius-pill);
+    padding:13px 26px;
+    border:none;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .2s ease, opacity .2s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.6; cursor:default;}
+
+  .btn-primary{
+    background:linear-gradient(135deg, var(--earth), var(--earth-dark));
+    color:#fff;
+    box-shadow:0 10px 24px -8px rgba(138,90,48,.6);
+    margin-left:auto;
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1.5px solid rgba(44,47,34,.22);
+  }
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+
+  /* ---- Tela de boas-vindas ---- */
+  .welcome-eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--olive-dark);
+    margin-bottom:10px;
+  }
+  .welcome-title{
+    font-family:var(--ff-serif);
+    font-size:clamp(28px, 5vw, 38px);
+    font-weight:700;
+    color:var(--forest-deep);
+    margin:0 0 14px;
+    line-height:1.15;
+  }
+  .welcome-text{
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+  .welcome-meta{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    opacity:.85;
+    margin:14px 0 26px;
+  }
+
+  /* ---- Tela final de agradecimento ---- */
+  .thanks-logo{
+    height:56px;
+    width:auto;
+    margin:0 auto 22px;
+    display:block;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,.18));
+  }
+  .thanks-icon{
+    display:block;
+    width:56px; height:56px;
+    margin:0 auto 18px;
+    color:var(--olive);
+  }
+  .thanks-title{
+    font-family:var(--ff-serif);
+    font-weight:700;
+    font-size:clamp(24px, 4.5vw, 32px);
+    color:var(--forest-deep);
+    text-align:center;
+    margin:0 0 14px;
+  }
+  .thanks-text{
+    font-size:15.5px;
+    line-height:1.65;
+    color:var(--ink-soft);
+    text-align:center;
+    margin:0 auto 8px;
+    max-width:480px;
+  }
+  .thanks-sub{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    opacity:.75;
+    margin-top:18px;
+  }
+
+  .spinner{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:3px solid rgba(139,147,81,.25);
+    border-top-color:var(--olive);
+    margin:6px auto 20px;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-banner{
+    background:#fbeae3;
+    border:1.5px solid #e6b79b;
+    color:#8a3c1e;
+    border-radius:var(--radius-md);
+    padding:16px 18px;
+    font-size:14.5px;
+    line-height:1.5;
+    margin-top:8px;
+  }
+  .error-banner strong{display:block; margin-bottom:4px;}
+
+  .hidden{display:none !important;}
+
+  /* ---- Responsivo ---- */
+  @media (max-width:640px){
+    .card{padding:30px 22px 24px; border-radius:26px;}
+    .top-bar{padding:18px 14px 6px;}
+    .logo-badge img{height:24px;}
+    .logo-badge{padding:8px 16px;}
+    .step-pill{right:14px; top:18px; font-size:12px; padding:6px 11px;}
+    .stage{padding:10px 14px 20px;}
+    .emoji-btn .emoji{font-size:22px;}
+    .emoji-btn .emoji-label{font-size:9.5px;}
+    .scale-btn{min-width:38px; height:40px; font-size:14px; border-radius:11px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Camadas de fundo (crossfade entre as fotos) -->
+<div class="bg-photo" id="bgLayerA"></div>
+<div class="bg-photo" id="bgLayerB"></div>
+<div class="bg-tint"></div>
+
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="app">
+  <div class="top-bar">
+    <div class="logo-badge">
+      <!-- LOGO: trocar o arquivo abaixo (variável LOGO_SRC no script) para atualizar -->
+      <img id="topLogo" src="" alt="ACT-Brasil">
+    </div>
+    <div class="step-pill hidden" id="stepPill">1 de 20</div>
+  </div>
+
+  <div class="progress-label hidden" id="progressLabel">0% preenchido</div>
+
+  <div class="stage" id="stage">
+
+    <!-- ===================== TELA DE BOAS-VINDAS ===================== -->
+    <div class="card" id="welcomeCard">
+      <svg class="leaf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20c8 0 15-6 16-16C10 5 4 12 4 20Z"/><path d="M4 20c3-6 7-9 12-11"/></svg>
+      <div class="welcome-eyebrow">Oficina ACT-Brasil</div>
+      <h1 class="welcome-title">Formulário de Avaliação</h1>
+      <p class="welcome-text">Sua opinião é muito importante para nós. Reserve alguns minutos para compartilhar suas impressões sobre esta oficina, suas respostas nos ajudam a construir encontros cada vez melhores.</p>
+      <p class="welcome-meta">20 perguntas · cerca de 8 a 10 minutos</p>
+      <div class="q-nav">
+        <button class="btn btn-primary" id="btnStart">Começar</button>
+      </div>
+    </div>
+
+    <!-- ===================== TELA DE PERGUNTA ===================== -->
+    <div class="card hidden" id="questionCard">
+      <svg class="leaf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20c8 0 15-6 16-16C10 5 4 12 4 20Z"/><path d="M4 20c3-6 7-9 12-11"/></svg>
+      <h2 class="q-text" id="qText"></h2>
+      <div class="q-optional-tag hidden" id="qOptionalTag">Opcional</div>
+      <div class="q-field" id="qField"></div>
+      <p class="q-error" id="qError">Por favor, responda antes de continuar.</p>
+      <div class="q-nav">
+        <button class="btn btn-ghost" id="btnBack">Voltar</button>
+        <button class="btn btn-primary" id="btnNext">Próxima</button>
+      </div>
+    </div>
+
+    <!-- ===================== TELA FINAL (AGRADECIMENTO) ===================== -->
+    <div class="card hidden" id="thanksCard">
+      <img class="thanks-logo" id="thanksLogo" src="" alt="ACT-Brasil">
+
+      <div id="thanksSending">
+        <div class="spinner"></div>
+        <p class="thanks-text">Enviando suas respostas...</p>
+      </div>
+
+      <div id="thanksSuccess" class="hidden">
+        <svg class="thanks-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.5l2.7 2.7L16.3 9"/></svg>
+        <h2 class="thanks-title">Muito obrigado(a) pela sua participação!</h2>
+        <p class="thanks-text">Sua presença e suas reflexões durante esta oficina foram muito valiosas para a ACT-Brasil e para o trabalho que construímos ao lado dos povos indígenas e das comunidades da Amazônia.</p>
+        <p class="thanks-text">Obrigado por dedicar seu tempo a este momento de troca e aprendizado.</p>
+        <p class="thanks-sub">Você já pode fechar esta página.</p>
+      </div>
+
+      <div id="thanksError" class="hidden">
+        <div class="error-banner">
+          <strong>Não foi possível enviar suas respostas.</strong>
+          Verifique sua conexão com a internet e tente novamente. Suas respostas continuam salvas neste dispositivo.
+        </div>
+        <div class="q-nav">
+          <button class="btn btn-primary" id="btnRetry" style="margin:20px auto 0;">Tentar novamente</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   CONFIGURAÇÃO: troque aqui suas fotos, logo e a URL do Google Apps Script
+   ============================================================================ */
+
+// URL do Web App do Google Apps Script (gerada ao publicar o script na sua
+// planilha, veja o passo a passo enviado junto com este arquivo).
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3P1x8ed9lRV4yTdpKsaJgoXWdoud1RWTzaYbOoaIkoZx1u4sBs_DXRSB_pbfjvtOU/exec';
+
+// Logo exibido no topo de todas as telas e na tela final. Troque o nome do
+// arquivo abaixo caso use outro logo (mantenha o arquivo na mesma pasta
+// deste HTML, ou informe o caminho correto).
+const LOGO_SRC = 'LOGO AMAZON.png';
+
+// Fotos de fundo. Elas se alternam automaticamente entre as perguntas.
+// Adicione, remova ou troque os nomes de arquivo livremente: a lista pode
+// ter quantas fotos você quiser.
+const BACKGROUND_IMAGES = [
+  '27 de Maio_ Dia Nacional da Mata Atlântica.jpg',
+  'With technology, Planet Earth II brings you face-to-face animals.jpg',
+  'Amazon forest bird eye view🕊️.jpg',
+  'download.jpg',
+  'Bright multicolored feathers of parrot.jpg'
+];
+
+// Foto de fundo usada na tela final de agradecimento.
+const THANKS_BACKGROUND = 'download.jpg';
+
+/* ============================================================================
+   PERGUNTAS
+   Tipos disponíveis:
+     'long'   -> texto longo (caixa de texto)
+     'short'  -> texto curto (uma linha)
+     'scale'  -> escala numérica de min a max (defina min, max, minLabel, maxLabel)
+     'emoji'  -> escala de carinhas (defina options: [{value, emoji, label}])
+     'choice' -> múltipla escolha (defina options: ['Opção 1', 'Opção 2', ...])
+   Adicione optional:true em qualquer pergunta para torná-la opcional.
+   ============================================================================ */
+const QUESTIONS = [
+  {
+    type:'emoji',
+    text:'Com qual sentimento você chega ao final desta semana?',
+    options:[
+      {value:1, emoji:'😔', label:'Esgotado(a)'},
+      {value:2, emoji:'😐', label:'Cansado(a)'},
+      {value:3, emoji:'🙂', label:'Tranquilo(a)'},
+      {value:4, emoji:'😊', label:'Feliz'},
+      {value:5, emoji:'🤩', label:'Radiante'}
+    ]
+  },
+  { type:'long', text:'Após a oficina, o que fazer de novo?' },
+  { type:'long', text:'O que não repetir?' },
+  { type:'long', text:'Ponto alto da oficina?' },
+  { type:'long', text:'Qual(is) é(são) o(s) conteúdo(s) que você mais se conecta dentre todos que tratamos?' },
+  { type:'long', text:'Qual foi sua intenção no dia 1?' },
+  { type:'scale', min:1, max:5, minLabel:'Pouco', maxLabel:'Totalmente', text:'O quanto você alcançou sua intenção neste tempo que estivemos juntos?' },
+  { type:'long', text:'Tendo em vista as quatro estratégias da ACT (Land, Livelihoods, Governance and Institutional Development), como você enxerga sua maior contribuição para esse trabalho coletivo?' },
+  { type:'long', text:'Como você explicaria a estratégia da ACT-Brasil para comunidades e parceiros?' },
+  { type:'long', text:'Quais são os benefícios de monitorar os impactos dos nossos processos/programas desde a ponta, desde o campo?' },
+  { type:'long', text:'Em quais áreas, habilidades e temáticas você quer se aprofundar mais?' },
+  { type:'long', text:'O que você precisa e quer desenvolver para fortalecer seu trabalho na ACT e junto aos povos indígenas?' },
+  { type:'long', text:'O que você leva deste encontro?' },
+  { type:'long', text:'O que você deixa?' },
+  { type:'scale', min:0, max:10, minLabel:'Muito ruim', maxLabel:'Excelente', text:'Avaliação: Metodologia e Conteúdo Programático' },
+  { type:'scale', min:0, max:10, minLabel:'Muito ruim', maxLabel:'Excelente', text:'Avaliação: Tempo da Oficina' },
+  { type:'scale', min:0, max:10, minLabel:'Muito ruim', maxLabel:'Excelente', text:'Avaliação: Local' },
+  { type:'scale', min:0, max:10, minLabel:'Muito ruim', maxLabel:'Excelente', text:'Avaliação Geral' },
+  { type:'long', text:'Cite pontos a melhorar nos próximos encontros' },
+  { type:'long', text:'Alguma dúvida ou pergunta?', optional:true }
+];
+
+/* ============================================================================
+   ENGINE DO FORMULÁRIO: normalmente não é necessário alterar daqui pra baixo
+   ============================================================================ */
+
+const STORAGE_KEY = 'act_oficina_avaliacao_draft_v1';
+
+const state = {
+  screen: 'welcome', // welcome | question | thanks
+  index: 0,
+  answers: new Array(QUESTIONS.length).fill(null)
+};
+
+// Elementos
+const welcomeCard = document.getElementById('welcomeCard');
+const questionCard = document.getElementById('questionCard');
+const thanksCard = document.getElementById('thanksCard');
+const stepPill = document.getElementById('stepPill');
+const progressLabel = document.getElementById('progressLabel');
+const progressFill = document.getElementById('progressFill');
+const qText = document.getElementById('qText');
+const qOptionalTag = document.getElementById('qOptionalTag');
+const qField = document.getElementById('qField');
+const qError = document.getElementById('qError');
+const btnBack = document.getElementById('btnBack');
+const btnNext = document.getElementById('btnNext');
+const btnStart = document.getElementById('btnStart');
+const btnRetry = document.getElementById('btnRetry');
+const bgLayerA = document.getElementById('bgLayerA');
+const bgLayerB = document.getElementById('bgLayerB');
+const stageEl = document.getElementById('stage');
+
+// Garante que o cartão nunca fique deslocado horizontalmente (alguns
+// navegadores tentam rolar o botão clicado para dentro da área visível).
+function resetStageScroll(){
+  stageEl.scrollLeft = 0;
+}
+
+document.getElementById('topLogo').src = LOGO_SRC;
+document.getElementById('thanksLogo').src = LOGO_SRC;
+
+const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+
+// ---- fundo com crossfade ----
+let bgActiveIsA = true;
+function setBackground(src){
+  const showing = bgActiveIsA ? bgLayerA : bgLayerB;
+  const hidden = bgActiveIsA ? bgLayerB : bgLayerA;
+  hidden.style.backgroundImage = `url("${src}")`;
+  // força reflow para garantir a transição
+  void hidden.offsetWidth;
+  hidden.classList.add('is-active');
+  showing.classList.remove('is-active');
+  bgActiveIsA = !bgActiveIsA;
+}
+
+// ---- rascunho local (para não perder respostas em caso de recarregamento) ----
+function persistDraft(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({index: state.index, answers: state.answers}));
+  }catch(e){ /* localStorage indisponível, segue sem salvar rascunho */ }
+}
+function restoreDraft(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(!draft || !Array.isArray(draft.answers) || draft.answers.length !== QUESTIONS.length) return false;
+    const hasAnyAnswer = draft.answers.some(a => a !== null && a !== '');
+    if(!hasAnyAnswer) return false;
+    state.answers = draft.answers;
+    state.index = Math.min(draft.index, QUESTIONS.length - 1);
+    return true;
+  }catch(e){ return false; }
+}
+function clearDraft(){
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+}
+
+// ---- construção do campo de resposta por tipo ----
+function buildField(q, savedValue){
+  qField.innerHTML = '';
+
+  if(q.type === 'long'){
+    const el = document.createElement('textarea');
+    el.className = 'field-textarea';
+    el.placeholder = 'Escreva sua resposta aqui...';
+    el.value = savedValue || '';
+    el.id = 'fieldInput';
+    qField.appendChild(el);
+    if(!isTouchDevice) setTimeout(() => el.focus(), 260);
+    return () => el.value.trim();
+  }
+
+  if(q.type === 'short'){
+    const el = document.createElement('input');
+    el.type = 'text';
+    el.className = 'field-text';
+    el.placeholder = 'Escreva sua resposta aqui...';
+    el.value = savedValue || '';
+    el.id = 'fieldInput';
+    qField.appendChild(el);
+    if(!isTouchDevice) setTimeout(() => el.focus(), 260);
+    return () => el.value.trim();
+  }
+
+  if(q.type === 'scale'){
+    const wrap = document.createElement('div');
+    const row = document.createElement('div');
+    row.className = 'scale-row';
+    let selected = savedValue !== null && savedValue !== undefined ? Number(savedValue) : null;
+
+    for(let v = q.min; v <= q.max; v++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'scale-btn' + (selected === v ? ' is-selected' : '');
+      b.textContent = v;
+      b.addEventListener('click', () => {
+        selected = v;
+        row.querySelectorAll('.scale-btn').forEach(btn => btn.classList.remove('is-selected'));
+        b.classList.add('is-selected');
+        hideError();
+        b.blur();
+      });
+      row.appendChild(b);
+    }
+    wrap.appendChild(row);
+
+    const labels = document.createElement('div');
+    labels.className = 'scale-labels';
+    labels.innerHTML = `<span>${q.minLabel || ''}</span><span>${q.maxLabel || ''}</span>`;
+    wrap.appendChild(labels);
+
+    qField.appendChild(wrap);
+    return () => selected;
+  }
+
+  if(q.type === 'emoji'){
+    const row = document.createElement('div');
+    row.className = 'emoji-row';
+    let selected = savedValue !== null && savedValue !== undefined ? Number(savedValue) : null;
+
+    q.options.forEach(opt => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'emoji-btn' + (selected === opt.value ? ' is-selected' : '');
+      b.innerHTML = `<span class="emoji">${opt.emoji}</span><span class="emoji-label">${opt.label}</span>`;
+      b.addEventListener('click', () => {
+        selected = opt.value;
+        row.querySelectorAll('.emoji-btn').forEach(btn => btn.classList.remove('is-selected'));
+        b.classList.add('is-selected');
+        hideError();
+        b.blur();
+      });
+      row.appendChild(b);
+    });
+
+    qField.appendChild(row);
+    return () => selected;
+  }
+
+  if(q.type === 'choice'){
+    const list = document.createElement('div');
+    list.className = 'choice-list';
+    let selected = savedValue || null;
+
+    q.options.forEach(opt => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'choice-btn' + (selected === opt ? ' is-selected' : '');
+      b.textContent = opt;
+      b.addEventListener('click', () => {
+        selected = opt;
+        list.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('is-selected'));
+        b.classList.add('is-selected');
+        hideError();
+        b.blur();
+      });
+      list.appendChild(b);
+    });
+
+    qField.appendChild(list);
+    return () => selected;
+  }
+
+  return () => null;
+}
+
+let currentGetValue = () => null;
+
+function showError(){
+  qError.classList.add('is-visible');
+  questionCard.classList.add('is-shaking');
+  setTimeout(() => questionCard.classList.remove('is-shaking'), 500);
+}
+function hideError(){
+  qError.classList.remove('is-visible');
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[state.index];
+  qText.textContent = q.text;
+  qOptionalTag.classList.toggle('hidden', !q.optional);
+  hideError();
+
+  currentGetValue = buildField(q, state.answers[state.index]);
+
+  const percent = Math.round(((state.index + 1) / QUESTIONS.length) * 100);
+  stepPill.textContent = `${state.index + 1} de ${QUESTIONS.length}`;
+  progressLabel.textContent = `${percent}% preenchido`;
+  progressFill.style.width = `${percent}%`;
+
+  btnBack.classList.toggle('hidden', state.index === 0);
+  btnNext.textContent = state.index === QUESTIONS.length - 1 ? 'Enviar' : 'Próxima';
+
+  setBackground(BACKGROUND_IMAGES[state.index % BACKGROUND_IMAGES.length]);
+
+  // Alguns navegadores deixam um resquício de pintura da tela anterior
+  // (especialmente após o foco em botões). Forcar o elemento a sair e
+  // voltar da arvore de renderizacao garante que o cartao seja repintado
+  // do zero a cada pergunta.
+  questionCard.style.display = 'none';
+  void questionCard.offsetHeight;
+  questionCard.style.display = '';
+}
+
+function swapCard(showFn){
+  questionCard.classList.add('is-transitioning');
+  setTimeout(() => {
+    showFn();
+    // força reflow antes de tirar a classe, para a transição rodar
+    void questionCard.offsetWidth;
+    questionCard.classList.remove('is-transitioning');
+  }, 260);
+}
+
+function goToQuestionScreen(){
+  welcomeCard.classList.add('hidden');
+  thanksCard.classList.add('hidden');
+  questionCard.classList.remove('hidden');
+  stepPill.classList.remove('hidden');
+  progressLabel.classList.remove('hidden');
+  renderQuestion();
+}
+
+btnStart.addEventListener('click', () => {
+  goToQuestionScreen();
+});
+
+btnNext.addEventListener('click', () => {
+  const q = QUESTIONS[state.index];
+  const value = currentGetValue();
+  const isEmpty = value === null || value === undefined || value === '';
+
+  if(!q.optional && isEmpty){
+    showError();
+    return;
+  }
+
+  state.answers[state.index] = isEmpty ? '' : value;
+  persistDraft();
+
+  if(state.index === QUESTIONS.length - 1){
+    goToThanksScreen();
+    return;
+  }
+
+  swapCard(() => {
+    state.index += 1;
+    renderQuestion();
+  });
+});
+
+btnBack.addEventListener('click', () => {
+  if(state.index === 0) return;
+  swapCard(() => {
+    state.index -= 1;
+    renderQuestion();
+  });
+});
+
+// ---- tela final e envio ----
+function goToThanksScreen(){
+  questionCard.classList.add('hidden');
+  stepPill.classList.add('hidden');
+  progressLabel.classList.add('hidden');
+  progressFill.style.width = '100%';
+  thanksCard.classList.remove('hidden');
+  setBackground(THANKS_BACKGROUND);
+  submitAnswers();
+}
+
+function setThanksState(view){
+  document.getElementById('thanksSending').classList.toggle('hidden', view !== 'sending');
+  document.getElementById('thanksSuccess').classList.toggle('hidden', view !== 'success');
+  document.getElementById('thanksError').classList.toggle('hidden', view !== 'error');
+}
+
+async function submitAnswers(){
+  setThanksState('sending');
+
+  const payload = {
+    questions: QUESTIONS.map(q => q.text),
+    answers: state.answers.map(a => a === null || a === undefined ? '' : String(a))
+  };
+
+  try{
+    if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('COLE_AQUI') !== -1){
+      throw new Error('URL do Google Apps Script não configurada.');
+    }
+
+    // O Apps Script Web App não envia cabeçalhos CORS, por isso usamos
+    // modo "no-cors": a requisição é enviada normalmente, mas não é
+    // possível ler a resposta do servidor no navegador. Falhas de rede
+    // (por exemplo, sem internet) ainda são detectadas pelo catch abaixo.
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    clearDraft();
+    setThanksState('success');
+  }catch(err){
+    setThanksState('error');
+  }
+}
+
+btnRetry.addEventListener('click', () => {
+  submitAnswers();
+});
+
+document.addEventListener('click', resetStageScroll, true);
+
+// ---- inicialização ----
+(function init(){
+  const restored = restoreDraft();
+  setBackground(BACKGROUND_IMAGES[0]);
+  if(restored){
+    goToQuestionScreen();
+  }
+  // se não houver rascunho, permanece na tela de boas-vindas (estado inicial do HTML)
+})();
+</script>
+</body>
+</html>
