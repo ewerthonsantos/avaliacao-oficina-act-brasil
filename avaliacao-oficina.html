@@ -636,17 +636,7 @@ const THANKS_BACKGROUND = 'download.jpg';
    Adicione optional:true em qualquer pergunta para torná-la opcional.
    ============================================================================ */
 const QUESTIONS = [
-  {
-    type:'emoji',
-    text:'Com qual sentimento você chega ao final desta semana?',
-    options:[
-      {value:1, emoji:'😔', label:'Esgotado(a)'},
-      {value:2, emoji:'😐', label:'Cansado(a)'},
-      {value:3, emoji:'🙂', label:'Tranquilo(a)'},
-      {value:4, emoji:'😊', label:'Feliz'},
-      {value:5, emoji:'🤩', label:'Radiante'}
-    ]
-  },
+  { type:'long', text:'Com qual sentimento você chega ao final desta semana?' },
   { type:'long', text:'Após a oficina, o que fazer de novo?' },
   { type:'long', text:'O que não repetir?' },
   { type:'long', text:'Ponto alto da oficina?' },
