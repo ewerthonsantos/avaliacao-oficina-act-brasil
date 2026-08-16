@@ -515,26 +515,46 @@
   .photo-credit strong{color:#d8d4bd; font-style:normal;}
 
   /* ---- mapa geral (território) ---- */
-  .map-geral{
-    margin:0 0 44px; padding:0; border:0;
-    display:block; width:100%; text-align:left; cursor:zoom-in;
-    background:rgba(250,246,236,.05); border:1px solid rgba(250,246,236,.14);
-    border-radius:var(--radius-lg); overflow:hidden;
+  .map-geral{margin:0 0 40px; max-width:600px;}
+  .map-geral-trigger{
+    display:block; width:100%; padding:0; margin:0; border:0;
+    cursor:zoom-in; position:relative; overflow:hidden;
+    background:rgba(250,246,236,.05); border:1px solid rgba(250,246,236,.16);
+    border-radius:var(--radius-lg);
     transition:border-color .25s var(--ease), transform .25s var(--ease);
   }
-  .map-geral:hover{border-color:rgba(139,147,81,.6); transform:translateY(-2px);}
-  .map-geral-frame{position:relative; overflow:hidden;}
-  .map-geral img{width:100%; height:auto; display:block;}
+  .map-geral-trigger:hover{border-color:rgba(139,147,81,.6); transform:translateY(-2px);}
+  .map-geral-trigger img{width:100%; height:auto; display:block;}
   .map-geral-zoom{
-    position:absolute; top:16px; right:16px;
+    position:absolute; top:14px; right:14px;
     background:rgba(28,33,22,.72); backdrop-filter:blur(6px);
-    color:var(--cream); font-size:.76rem; font-weight:700;
-    padding:8px 14px; border-radius:var(--radius-pill);
+    color:var(--cream); font-size:.74rem; font-weight:700;
+    padding:7px 13px; border-radius:var(--radius-pill);
     display:flex; align-items:center; gap:6px;
   }
-  .map-geral-cap{padding:18px 22px;}
-  .map-geral-cap strong{display:block; font-size:1rem; color:var(--cream); margin-bottom:4px;}
-  .map-geral-cap span{font-size:.86rem; color:#c9c4ac; line-height:1.5;}
+  .map-geral-cap{margin:14px 2px 0; padding:0; text-align:left;}
+  .map-geral-cap strong{display:block; font-size:.95rem; color:var(--cream); margin-bottom:5px;}
+  .map-geral-cap span{display:block; font-size:.85rem; color:#c9c4ac; line-height:1.6; max-width:540px;}
+
+  /* ---- galeria de mapas por território ---- */
+  .map-gallery-label{
+    font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    color:var(--olive); margin:0 0 14px;
+  }
+  .map-gallery{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));
+    gap:14px; margin-bottom:48px;
+  }
+  .map-gallery-card{
+    display:block; width:100%; padding:0; margin:0; border:0; text-align:left;
+    cursor:zoom-in; background:rgba(250,246,236,.05); border:1px solid rgba(250,246,236,.16);
+    border-radius:var(--radius-md); overflow:hidden;
+    transition:border-color .2s var(--ease), transform .2s var(--ease);
+  }
+  .map-gallery-card:hover{border-color:rgba(139,147,81,.6); transform:translateY(-2px);}
+  .map-gallery-card img{width:100%; height:120px; object-fit:cover; display:block;}
+  .map-gallery-card-cap{padding:11px 13px 13px;}
+  .map-gallery-card-cap strong{display:block; font-size:.78rem; font-weight:700; color:var(--cream); line-height:1.3;}
 
   /* ---- map thumbnails (dentro dos cards de processo) ---- */
   .proc-maps{
@@ -796,16 +816,19 @@
     </div>
     <p class="terr-quote reveal">"Estamos em diferentes regiões amazônicas, cada uma com seus próprios contextos, desafios e potencialidades."</p>
 
-    <button type="button" class="map-geral reveal" id="mapGeral" data-map-key="geral">
-      <span class="map-geral-frame">
+    <figure class="map-geral reveal">
+      <button type="button" class="map-geral-trigger" id="mapGeral" data-map-key="geral" aria-label="Ampliar mapa: Territórios de atuação ACT-Brasil 2026">
         <img id="mapGeralImg" src="" alt="Mapa: Territórios de atuação ACT-Brasil 2026" loading="lazy">
-        <span class="map-geral-zoom">🔍 Ver mapa ampliado</span>
-      </span>
-      <span class="map-geral-cap">
+        <span class="map-geral-zoom">🔍 Ampliar</span>
+      </button>
+      <figcaption class="map-geral-cap">
         <strong>Territórios de atuação ACT-Brasil 2026</strong>
-        <span>Apoio direto, apoio direto em demarcação e apoio indireto nas Terras Indígenas onde atuamos. Toque para ampliar — os mapas específicos de cada território também aparecem nos cards de processo, na seção anterior.</span>
-      </span>
-    </button>
+        <span>Apoio direto, apoio direto em demarcação e apoio indireto nas Terras Indígenas onde atuamos.</span>
+      </figcaption>
+    </figure>
+
+    <h4 class="map-gallery-label reveal">Mapas por território</h4>
+    <div class="map-gallery reveal" id="mapGallery"></div>
 
     <div class="terr-cols">
       <ul class="region-list reveal" id="regionList"></ul>
@@ -1105,7 +1128,13 @@
 
   document.getElementById('terrasCloud').innerHTML = TERRAS.map(t => `<span class="chip">${t}</span>`).join('');
   document.getElementById('povosCloud').innerHTML = POVOS.map(p => `<span class="chip">${p}</span>`).join('');
-  document.getElementById('mapGeralImg').src = MAPAS_BY_KEY.geral.thumb;
+  document.getElementById('mapGeralImg').src = MAPAS_BY_KEY.geral.full;
+
+  document.getElementById('mapGallery').innerHTML = MAPAS.filter(m => m.key !== 'geral').map(m => `
+    <button type="button" class="map-gallery-card" data-map-key="${m.key}">
+      <img src="${m.thumb}" alt="Mapa: ${m.titulo}" loading="lazy">
+      <span class="map-gallery-card-cap"><strong>${m.titulo}</strong></span>
+    </button>`).join('');
 
   /* ============== lightbox (mapas) ============== */
   const lightbox = document.getElementById('lightbox');
